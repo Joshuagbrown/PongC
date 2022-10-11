@@ -61,6 +61,18 @@ void welcome_screen (void)
     }
 }
 
+boing_state_t move_ball(int* tick, boing_state_t ballState)
+{
+    *tick = *tick + 1;
+    tinygl_draw_point (ballState.pos, 1);
+    if (*tick >= 40) {
+        *tick = 0;
+        tinygl_draw_point (ballState.pos, 0);
+        ballState = boing_update(ballState);
+    }
+    tinygl_update();
+    return(ballState);
+}
 
 int main (void)
 {
@@ -82,18 +94,11 @@ int main (void)
     maxScore = maxScore;
     tinygl_clear();
     tinygl_clear();
-    boing_state_t state = boing_init(1,0,DIR_NE);
+    boing_state_t ballState = boing_init(1,0,DIR_NE);
     int tick = 0;
     while (1)
     {
+        ballState = move_ball(&tick, ballState);
         pacer_wait();
-        tick ++;
-        tinygl_draw_point (state.pos, 1);
-        if (tick >= 40) {
-            tick = 0;
-            tinygl_draw_point (state.pos, 0);
-            state = boing_update(state);
-        }
-        tinygl_update();
     }
 }
