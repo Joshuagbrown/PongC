@@ -9,7 +9,6 @@
 #define PACER_RATE 400
 #define MESSAGE_RATE 10
 #define RECV_CODE = 123
-#
 
 typedef struct {
     int8_t x;
