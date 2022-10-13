@@ -61,8 +61,9 @@ void display_text (void)
     }
 }
 
-int pass_ball(Ball_t ball)
+int pass_ball(Ball_t ball, int* retry)
 {
+    ir_serial_ret_t ret = 3;
     int vy = 2;
     uint8_t bit;
     switch(ball.vy)
@@ -85,13 +86,22 @@ int pass_ball(Ball_t ball)
     }
     bit = (vy<<3) | (ball.y);
     ir_serial_transmit(bit);
+    uint8_t code = 0;
+    ret = ir_serial_receive(&code);
+    *retry = 0;
+    if (ret == 1)
+    {
+        if (code == 128) {
+            ir_serial_transmit(bit);
+        }
+    } 
     return(RECIEVING);
 }
 
-Ball_t wait_for_ball(int* state)
+Ball_t wait_for_ball(int* state, int* retry)
 {
     Ball_t newBall;
-    ir_serial_ret_t ret = 0;
+    ir_serial_ret_t ret = 3;
     uint8_t data;
     ret = ir_serial_receive(&data);
     pacer_wait();
@@ -124,6 +134,9 @@ Ball_t wait_for_ball(int* state)
             newBall.vy = 0;
         }
         *state = PLAYING;
+    } else if (retry == 0) {
+        *retry = 1;
+        ir_serial_transmit(128);
     }
     return(newBall);
 }
@@ -150,6 +163,7 @@ int main (void)
     tinygl_point_t rightLine = {4, 4};
     int16_t tick = 0;
     int16_t no_resp_time = 0;
+    int retry = 0;
     while (1)
     {
         if(state == STARTUP) {
@@ -166,7 +180,7 @@ int main (void)
 
         if(state == SENDING) {
             move_paddle(&leftLine, &rightLine);
-            state = pass_ball(ball);
+            state = pass_ball(ball, &retry);
             no_resp_time = 0;
             tinygl_point_t ballPoint = {(ball).x,(ball).y};
             tinygl_draw_point (ballPoint, 0);
@@ -185,8 +199,8 @@ int main (void)
         {
             no_resp_time ++;
             move_paddle(&leftLine, &rightLine);
-            ball = wait_for_ball(&state);
-            if(no_resp_time > 1100) {
+            ball = wait_for_ball(&state, &retry);
+            if(no_resp_time > 1500) {
                 no_resp_time = 0;
                 tinygl_clear();
                 tinygl_text("NO BALL");
@@ -200,7 +214,7 @@ int main (void)
         {
             tinygl_clear();
             Ball_t winBall = {0,0,0,5};
-            pass_ball(winBall);
+            pass_ball(winBall, &retry);
             tinygl_text("LOST");
             display_text();
             state = RECIEVING;
