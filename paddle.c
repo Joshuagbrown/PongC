@@ -29,17 +29,18 @@ int check_paddle(Ball_t* ball, tinygl_point_t left, tinygl_point_t right)
 {
     if((*ball).y == left.y) {
         (*ball).vy = -1;
+        (*ball).vx = -1;
         return(PLAYING);
 
     } if ((*ball).y == left.y + 1) {
         (*ball).vy = 0;
+        (*ball).vx = -1;
         return(PLAYING);
 
     } if ((*ball).y == right.y) {
         (*ball).vy = 1;
+        (*ball).vx = -1;
         return(PLAYING);
     }
-    
-    
     return(GAMEOVER);
 }

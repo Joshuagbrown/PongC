@@ -18,7 +18,7 @@ typedef enum {
 
 Ball_t move_ball(int16_t* tick, Ball_t ball);
 
-Ball_t reset_ball(Ball_t ball);
+Ball_t reset_ball(void);
 
 int check_wall(Ball_t* ball, int16_t tick);
 

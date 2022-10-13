@@ -18,25 +18,21 @@ Ball_t move_ball(int16_t* tick, Ball_t ball)
     return(ball);
 }
 
-Ball_t reset_ball(Ball_t ball)
+Ball_t reset_ball(void)
 {
-    ball.x = 1;
-    ball.y = 1;
-    ball.vx = 1;
-    ball.vy = 1;
-    return(ball);
+    Ball_t newBall = {0,3,1,0};
+    return(newBall);
 }
 
 int check_wall(Ball_t* ball, int16_t tick)
 {
     if ((*ball).x >= 4)
     {
-        (*ball).vx = (*ball).vx * -1;
+        (*ball).vx = -1;
     }
-    if ((*ball).x <= 0 && (*ball).vx < 0)
+    if ((*ball).x < 0 && (*ball).vx < 0)
     {
-        (*ball).vx = (*ball).vx * -1;
-        //return(SENDING);
+        return(SENDING);
     }
     if (((*ball).y + (*ball).vy >= 7))
     {
