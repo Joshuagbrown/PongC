@@ -1,3 +1,10 @@
+/**
+    @file ball.h
+    @author your name (you@domain.com)
+    @brief 
+    @date 2022-10-15
+ */
+
 #include "system.h"
 #include "pacer.h"
 #include "navswitch.h"
@@ -9,137 +16,11 @@
 #include "ir_serial.h"
 #include "ball.h"
 #include "paddle.h"
+#include "text.h"
 
 #define PACER_RATE 500
 #define MESSAGE_RATE 10
 #define RECV_CODE = 123
-
-
-void display_character (char character)
-{
-    char buffer[2];
-    buffer[0] = character;
-    buffer[1] = '\0';
-    tinygl_text (buffer);
-}
-
-char char_in_bound(int8_t lowerBound, int8_t upperBound)
-{
-    char character = '1';
-    while(1) {
-        pacer_wait ();
-        tinygl_update ();
-        navswitch_update ();       
-        if (navswitch_push_event_p (NAVSWITCH_NORTH)) {
-            if(character < upperBound) {
-                character++;
-            }
-        }     
-        if (navswitch_push_event_p (NAVSWITCH_SOUTH)) {
-            if(character > lowerBound) {
-                character--;
-            }
-        }     
-        if (navswitch_push_event_p(NAVSWITCH_PUSH)) {
-            return(character);
-        }
-        display_character (character);
-    }   
-}
-
-
-void display_text (void)
-{
-    while(1) {
-        pacer_wait ();
-        tinygl_update ();
-        navswitch_update ();
-        if (navswitch_push_event_p(NAVSWITCH_PUSH)) {
-            tinygl_clear();
-            return;
-        }
-    }
-}
-
-int pass_ball(Ball_t ball, int* retry)
-{
-    ir_serial_ret_t ret = 3;
-    int vy = 2;
-    uint8_t bit;
-    switch(ball.vy)
-    {
-        case -1:
-        vy = 1;
-        break;
-
-        case 0:
-        vy = 2;
-        break;
-
-        case 1:
-        vy = 3;
-        break;
-
-        case 5:
-        vy = 5;
-        break;
-    }
-    bit = (vy<<3) | (ball.y);
-    ir_serial_transmit(bit);
-    uint8_t code = 0;
-    ret = ir_serial_receive(&code);
-    *retry = 0;
-    if (ret == 1)
-    {
-        if (code == 128) {
-            ir_serial_transmit(bit);
-        }
-    } 
-    return(RECIEVING);
-}
-
-Ball_t wait_for_ball(int* state, int* retry)
-{
-    Ball_t newBall;
-    ir_serial_ret_t ret = 3;
-    uint8_t data;
-    ret = ir_serial_receive(&data);
-    pacer_wait();
-    if(ret == 1) {
-        newBall.vx = 1;
-        newBall.x = 0;
-        newBall.y = 6 - (data & 0b00000111);
-        switch((data & 0b00111000) >> 3)
-        {
-            case 1:
-            newBall.vy = 1;
-            break;
-
-            case 2:
-            newBall.vy = 0;
-            break;
-
-            case 3:
-            newBall.vy = -1;
-            break;
-
-            case 5:
-            newBall = reset_ball();
-            tinygl_clear();
-            tinygl_text("WIN");
-            display_text();
-            break; 
-
-            default:
-            newBall.vy = 0;
-        }
-        *state = PLAYING;
-    } else if (retry == 0) {
-        *retry = 1;
-        ir_serial_transmit(128);
-    }
-    return(newBall);
-}
 
 void main_init(void)
 {
@@ -188,7 +69,7 @@ int main (void)
 
         if(state == PLAYING) {
             move_paddle(&leftLine, &rightLine);
-            state = check_wall(&ball,tick);
+            state = check_wall(&ball);
             ball = move_ball(&tick, ball);
             if(ball.x == 3) {
                 state = check_paddle(&ball,leftLine, rightLine);
