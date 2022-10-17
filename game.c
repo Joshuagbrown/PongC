@@ -1,6 +1,6 @@
 /**
  * @file game.c
- * @author Joshua Brown, Francisco
+ * @author Joshua Brown, Maxzi Francisco
  * @brief main function controls for the game
  * @date 17 October 2022
  */
