@@ -1,7 +1,7 @@
 # File:   Makefile
-# Author: M. P. Hayes, UCECE
-# Date:   12 Sep 2010
-# Descr:  Makefile for game
+# Author: Joshua Brown, Maxzi Francisco
+# Date:   17 October 2022
+# Descr:  Makefile for PONG game
 
 # Definitions.
 CC = avr-gcc
