@@ -1,8 +1,8 @@
 /**
-    @file ball.h
-    @author your name (you@domain.com)
-    @brief 
-    @date 2022-10-15
+ * @file game.c
+ * @author Joshua Brown, Francisco
+ * @brief main function controls for the game
+ * @date 17 October 2022
  */
 
 #include "system.h"
@@ -18,10 +18,15 @@
 #include "paddle.h"
 #include "text.h"
 
+/** Define pacer rate in Hz */
 #define PACER_RATE 500
+/** Define message rate */
 #define MESSAGE_RATE 10
-#define RECV_CODE = 123
+/** Defines maximum wait time */
+#define MAX_WAIT 2000
 
+
+/** Initialises functions */
 void main_init(void)
 {
     system_init ();
@@ -35,6 +40,7 @@ void main_init(void)
     ir_serial_init ();
 }
 
+/** Main program */
 int main (void)
 {
     int state = STARTUP;
@@ -81,7 +87,7 @@ int main (void)
             no_resp_time ++;
             move_paddle(&leftLine, &rightLine);
             ball = wait_for_ball(&state, &retry);
-            if(no_resp_time > 1500) {
+            if(no_resp_time > MAX_WAIT) {
                 no_resp_time = 0;
                 tinygl_clear();
                 tinygl_text("NO BALL");
