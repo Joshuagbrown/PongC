@@ -18,9 +18,13 @@
  */
 void display_character (char character)
 {
+    //Initialises buffer
     char buffer[2];
+    //Initialises first element
     buffer[0] = character;
+    //Last element
     buffer[1] = '\0';
+    //Set to tinygl
     tinygl_text (buffer);
 }
 
