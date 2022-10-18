@@ -14,6 +14,7 @@
 #include "ball.h"
 #include "text.h"
 
+//Bit for recieve and send transmission
 #define RECV_CODE = 123
 
 
@@ -24,16 +25,21 @@
 */
 Ball_t move_ball(int16_t* tick, Ball_t ball)
 {
+    //Set struct for ball
     tinygl_point_t ballPoint = {ball.x,ball.y};
+    //Increments tick 
     *tick = *tick + 1;
+    //Initialise ball on LED matrix
     tinygl_draw_point (ballPoint, 1);
+    //Checks if tick within bounds
     if (*tick >= 100) {
         *tick = 0;
+        //Set new position of ball
         tinygl_draw_point (ballPoint, 0);
         ball.y += ball.vy;
         ball.x += ball.vx;
-        
     }
+    //Returns ball
     return(ball);
 }
 
@@ -43,6 +49,7 @@ Ball_t move_ball(int16_t* tick, Ball_t ball)
 */
 Ball_t reset_ball(void)
 {
+    //Make new ball in the stating position
     Ball_t newBall = {0,3,1,0};
     return(newBall);
 }
@@ -54,14 +61,17 @@ Ball_t reset_ball(void)
 */
 int check_wall(Ball_t* ball)
 {
+    //Prevents glitches during transmission, if ball is recieved past paddle, doesnt break the game
     if ((*ball).x >= 4)
     {
         (*ball).vx = -1;
     }
     if ((*ball).x < 0 && (*ball).vx < 0)
     {
+    //Confirms ball is transmitting
         return(SENDING);
     }
+    //Prevents glitches during transmission, if ball is recieved past paddle, doesnt break the game
     if (((*ball).y + (*ball).vy >= 7))
     {
         (*ball).vy = (*ball).vy * -1;
@@ -70,6 +80,7 @@ int check_wall(Ball_t* ball)
     if (((*ball).y + (*ball).vy < 0)) {
         (*ball).vy = (*ball).vy * -1;
     }
+    //Confrims game is still ongoing
     return(PLAYING);
 }
 
@@ -107,13 +118,16 @@ int pass_ball(Ball_t ball, int* retry)
     ir_serial_transmit(bit);
     uint8_t code = 0;
     ret = ir_serial_receive(&code);
+    //If ball fails to transmit, retry once again
     *retry = 0;
     if (ret == 1)
     {
+    //Transmits the ball
         if (code == 128) {
             ir_serial_transmit(bit);
         }
     } 
+    //Set state as receiving
     return(RECIEVING);
 }
 
@@ -125,11 +139,16 @@ int pass_ball(Ball_t ball, int* retry)
 */
 Ball_t wait_for_ball(int* state, int* retry)
 {
+    //Initialises a ball
     Ball_t newBall;
+    //Initialises IR transmission
     ir_serial_ret_t ret = 3;
+    //Initialises data
     uint8_t data;
+    //Set IR trasmission
     ret = ir_serial_receive(&data);
     pacer_wait();
+
     if(ret == 1) {
         newBall.vx = 1;
         newBall.x = 0;
