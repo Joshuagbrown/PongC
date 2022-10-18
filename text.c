@@ -12,7 +12,6 @@
 #include "pacer.h"
 #include "display.h" 
 
-
 /** Displays characters for player options, used by char_in_bound function
     @param character player type ('1' and '2') 
  */
