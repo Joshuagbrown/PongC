@@ -38,6 +38,7 @@ Ball_t move_ball(int16_t* tick, Ball_t ball)
         tinygl_draw_point (ballPoint, 0);
         ball.y += ball.vy;
         ball.x += ball.vx;
+        
     }
     //Returns ball
     return(ball);
