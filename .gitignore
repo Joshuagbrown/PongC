@@ -2,4 +2,4 @@
 *.hex
 *.out
 *.vscode
-
+*.test
