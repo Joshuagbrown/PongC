@@ -14,7 +14,10 @@
 #include "ball.h"
 #include "text.h"
 
-#define RECV_CODE = 123
+/*The recv code check to send through again*/
+#define RECV_CODE 123
+/*Ball speed, set higher to slow ball down*/
+#define BALL_SPEED 100
 
 
 /** Initialises ball coordinates using tinygl
@@ -24,12 +27,19 @@
 */
 Ball_t move_ball(int16_t* tick, Ball_t ball)
 {
+    //Get the ball as a tinygl point
     tinygl_point_t ballPoint = {ball.x,ball.y};
+    //Increase the tick
     *tick = *tick + 1;
+    //Draw the ball a the position
     tinygl_draw_point (ballPoint, 1);
-    if (*tick >= 100) {
+    //If tick is 100
+    if (*tick >= BALL_SPEED) {
+        //Reset the tick
         *tick = 0;
+        //Turn ball off
         tinygl_draw_point (ballPoint, 0);
+        //Increase the x and y by vx and vy respetivly
         ball.y += ball.vy;
         ball.x += ball.vx;
         
@@ -43,6 +53,7 @@ Ball_t move_ball(int16_t* tick, Ball_t ball)
 */
 Ball_t reset_ball(void)
 {
+    //Set ball to an easy starting position
     Ball_t newBall = {0,3,1,0};
     return(newBall);
 }
@@ -54,19 +65,23 @@ Ball_t reset_ball(void)
 */
 int check_wall(Ball_t* ball)
 {
+    //This prevents the ball from being glitched past the paddle
     if ((*ball).x >= 4)
     {
         (*ball).vx = -1;
     }
+    //If the ball is at the top of the screen and its next state is past the screen, set state to sending
     if ((*ball).x < 0 && (*ball).vx < 0)
     {
         return(SENDING);
     }
+    //If ball hits wall switch velocity
     if (((*ball).y + (*ball).vy >= 7))
     {
         (*ball).vy = (*ball).vy * -1;
 
     }
+    //If ball hits wall switch velocity
     if (((*ball).y + (*ball).vy < 0)) {
         (*ball).vy = (*ball).vy * -1;
     }
@@ -82,9 +97,10 @@ int check_wall(Ball_t* ball)
 */
 int pass_ball(Ball_t ball, int* retry)
 {
-    ir_serial_ret_t ret = 3;
-    int vy = 2;
+    ir_serial_ret_t ret = 0;
+    int vy = 0;
     uint8_t bit;
+    //Set the values of vy to be positive, and therefore transferable via a bit
     switch(ball.vy)
     {
         case -1:
@@ -99,18 +115,26 @@ int pass_ball(Ball_t ball, int* retry)
         vy = 3;
         break;
 
+        //Win ball case
         case 5:
         vy = 5;
         break;
     }
+    //Turn the data into a bit
     bit = (vy<<3) | (ball.y);
+    //Transmit the data
     ir_serial_transmit(bit);
+    //Recieve a code if non transmitted
     uint8_t code = 0;
     ret = ir_serial_receive(&code);
+    //set retry attempt to 0
     *retry = 0;
+    //if recieved data
     if (ret == 1)
     {
-        if (code == 128) {
+        //if code is the unrecieved code
+        if (code == RECV_CODE) {
+            //retry
             ir_serial_transmit(bit);
         }
     } 
@@ -125,14 +149,19 @@ int pass_ball(Ball_t ball, int* retry)
 */
 Ball_t wait_for_ball(int* state, int* retry)
 {
+    //intiate a ball to be recieved
     Ball_t newBall;
-    ir_serial_ret_t ret = 3;
+    ir_serial_ret_t ret = 0;
     uint8_t data;
+    //recieve the data
     ret = ir_serial_receive(&data);
     pacer_wait();
+    //If data code is confirmed
     if(ret == 1) {
+        //Set the ball values to the correct values
         newBall.vx = 1;
         newBall.x = 0;
+        //Process the data
         newBall.y = 6 - (data & 0b00000111);
         switch((data & 0b00111000) >> 3)
         {
@@ -148,11 +177,15 @@ Ball_t wait_for_ball(int* state, int* retry)
             newBall.vy = -1;
             break;
 
+            //Win ball case
             case 5:
+            //Clear the ball
             newBall = reset_ball();
             tinygl_clear();
+            //Send win
             tinygl_text("WIN");
             display_text();
+            //If clicks down sends back a reset ball
             break; 
 
             default:
@@ -161,7 +194,8 @@ Ball_t wait_for_ball(int* state, int* retry)
         *state = PLAYING;
     } else if (retry == 0) {
         *retry = 1;
-        ir_serial_transmit(128);
+        //Resend code if hasnt retried since sending
+        ir_serial_transmit(RECV_CODE);
     }
     return(newBall);
 }
